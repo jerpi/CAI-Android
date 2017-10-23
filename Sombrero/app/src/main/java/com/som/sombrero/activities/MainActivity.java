@@ -20,6 +20,7 @@ import com.som.sombrero.R;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
+    private static final String TAG = "MainActivity";
     private static final int PERMISSIONS_COARSE_LOCATION = 1;
 
     TextView mainText;
@@ -30,7 +31,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mainText = (TextView) findViewById(R.id.main_textview);
-        mainButton = (Button) findViewById(R.id.main_button);
+        Button mainButton = (Button) findViewById(R.id.main_button);
         mainButton.setOnClickListener(this);
 
         askPermissions();

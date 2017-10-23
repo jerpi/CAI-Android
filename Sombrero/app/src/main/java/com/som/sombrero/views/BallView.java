@@ -12,12 +12,8 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.som.sombrero.exceptions.HandlerLaunchedException;
-import com.som.sombrero.listeners.LeaveScreenListener;
+import com.som.sombrero.listeners.BallLeftScreenListener;
 import com.som.sombrero.listeners.WallBounceListener;
-
-/**
- * Created by Jérémy on 17/10/2017.
- */
 
 public class BallView extends AppCompatImageView implements View.OnTouchListener, GestureDetector.OnGestureListener {
 
@@ -25,10 +21,8 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
     private Handler mHandler;
     private Runnable mRunnable;
 
-    private LeaveScreenListener leaveScreenListener = null;
+    private BallLeftScreenListener ballLeftScreenListener = null;
     private WallBounceListener wallBounceListener = null;
-
-    private final static float STEP = 5;
 
     private float speedX = 0;
     private float speedY = 0;
@@ -66,31 +60,31 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
                 float dx = speedX;
                 float dy = speedY;
 
-                float futurX = getX() + dx;
-                float futurY = getY() + dy;
+                float futureX = getX() + dx;
+                float futureY = getY() + dy;
 
-                if (futurX < 0) {
+                if (futureX < 0) {
                     dx = Math.abs(dx);
                     speedX = Math.abs(speedX);
                     if (wallBounceListener != null) {
                         wallBounceListener.onWallBounced();
                     }
                 }
-                if (futurX > width) {
+                if (futureX > width) {
                     dx = - Math.abs(dx);
                     speedX = - Math.abs(speedX);
                     if (wallBounceListener != null) {
                         wallBounceListener.onWallBounced();
                     }
                 }
-                if (futurY < 0) {
+                if (futureY < 0) {
                     dy = Math.abs(dy);
                     speedY = Math.abs(speedY);
-                    if (leaveScreenListener != null) {
-                        leaveScreenListener.onScreenLeft();
+                    if (ballLeftScreenListener != null) {
+                        ballLeftScreenListener.onScreenLeft();
                     }
                 }
-                if (futurY > height) {
+                if (futureY > height) {
                     dy = - Math.abs(dy);
                     speedY = - Math.abs(dy);
                     if (wallBounceListener != null) {
@@ -159,16 +153,8 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
         return true;
     }
 
-    public LeaveScreenListener getLeaveScreenListener() {
-        return leaveScreenListener;
-    }
-
-    public void setLeaveScreenListener(LeaveScreenListener leaveScreenListener) {
-        this.leaveScreenListener = leaveScreenListener;
-    }
-
-    public WallBounceListener getWallBounceListener() {
-        return wallBounceListener;
+    public void setBallLeftScreenListener(BallLeftScreenListener ballLeftScreenListener) {
+        this.ballLeftScreenListener = ballLeftScreenListener;
     }
 
     public void setWallBounceListener(WallBounceListener wallBounceListener) {

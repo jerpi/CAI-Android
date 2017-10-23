@@ -12,22 +12,17 @@ import android.view.KeyEvent;
 
 import com.som.sombrero.R;
 import com.som.sombrero.exceptions.HandlerLaunchedException;
-import com.som.sombrero.listeners.LeaveScreenListener;
+import com.som.sombrero.listeners.BallLeftScreenListener;
 import com.som.sombrero.listeners.WallBounceListener;
 import com.som.sombrero.views.BallView;
 
-
-/**
- * Created by Jérémy on 17/10/2017.
- */
-public class GameActivity extends AppCompatActivity implements LeaveScreenListener, WallBounceListener {
-
-    private static final int REQUEST_ENABLE_BT = 12;
+public class GameActivity extends AppCompatActivity implements BallLeftScreenListener, WallBounceListener {
 
     private static final String TAG = "GameActivity";
+    private static final int REQUEST_ENABLE_BT = 1;
 
     private BluetoothAdapter mBluetoothAdapter;
-    BallView mBall;
+    private BallView mBall;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -40,7 +35,7 @@ public class GameActivity extends AppCompatActivity implements LeaveScreenListen
         } catch (HandlerLaunchedException e) {
             Log.d(TAG, e.getLocalizedMessage());
         }
-        mBall.setLeaveScreenListener(this);
+        mBall.setBallLeftScreenListener(this);
         mBall.setWallBounceListener(this);
 
         init();
