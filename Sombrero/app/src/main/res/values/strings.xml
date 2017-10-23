@@ -1,0 +1,11 @@
+<resources>
+    <!-- App -->
+    <string name="app_name">Sombrero</string>
+
+    <!-- Main Activity -->
+    <string name="start">Go!</string>
+    <string name="settings">Paramètres</string>
+    <string name="permissions_required">Cette permission est nécessaire au fonctionnement de l\'application.</string>
+    <string name="no_bluetooth">Cet appareil ne supporte pas le Bluetooth</string>
+    <string name="back_to_menu">Vous allez être redirigé vers le menu.</string>
+</resources>

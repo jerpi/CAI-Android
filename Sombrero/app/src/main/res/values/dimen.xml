@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Main Activity -->
+    <dimen name="button_margin">30dp</dimen>
+    <!-- Game Activity -->
+    <dimen name="ball_diameter">50dp</dimen>
+</resources>
