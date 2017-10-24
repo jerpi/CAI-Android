@@ -7,21 +7,30 @@ import android.util.Log;
 
 import com.som.sombrero.R;
 import com.som.sombrero.exceptions.HandlerLaunchedException;
-import com.som.sombrero.listeners.BallLeftScreenListener;
-import com.som.sombrero.listeners.WallBounceListener;
+import com.som.sombrero.listeners.OnBallLeftScreenListener;
+import com.som.sombrero.listeners.OnGoalScoredListener;
+import com.som.sombrero.listeners.OnWallBounceListener;
 import com.som.sombrero.views.BallView;
 
-public class GameActivity extends AppCompatActivity implements BallLeftScreenListener, WallBounceListener {
+public class GameActivity extends AppCompatActivity implements OnBallLeftScreenListener, OnWallBounceListener, OnGoalScoredListener {
 
     private static final String TAG = "GameActivity";
     private static final int REQUEST_ENABLE_BT = 1;
 
+    public static final String MULTI = "Multi";
+
     private BallView mBall;
+    private boolean isMulti = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+
+        Bundle bundle = getIntent().getExtras();
+        if (bundle != null) {
+            isMulti = bundle.getBoolean(MULTI, false);
+        }
 
         mBall = (BallView) findViewById(R.id.game_ball);
         try {
@@ -29,8 +38,9 @@ public class GameActivity extends AppCompatActivity implements BallLeftScreenLis
         } catch (HandlerLaunchedException e) {
             Log.d(TAG, e.getLocalizedMessage());
         }
-        mBall.setBallLeftScreenListener(this);
-        mBall.setWallBounceListener(this);
+        mBall.setOnBallLeftScreenListener(this);
+        mBall.setOnWallBounceListener(this);
+        mBall.setOnGoalScoredListener(this);
     }
 
     @Override
@@ -39,14 +49,8 @@ public class GameActivity extends AppCompatActivity implements BallLeftScreenLis
         mBall.stopHandler();
     }
 
-
-
-
-
-
-
     @Override
-    public void onWallBounced() {
+    public void onBounce() {
         Log.d(TAG, "WallBounced");
     }
 
@@ -55,7 +59,8 @@ public class GameActivity extends AppCompatActivity implements BallLeftScreenLis
         Log.d(TAG, "onScreenLeft");
     }
 
-
-
-
+    @Override
+    public void onGoalScored() {
+        Log.d(TAG, "onGoalScored");
+    }
 }

@@ -11,8 +11,9 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.som.sombrero.exceptions.HandlerLaunchedException;
-import com.som.sombrero.listeners.BallLeftScreenListener;
-import com.som.sombrero.listeners.WallBounceListener;
+import com.som.sombrero.listeners.OnBallLeftScreenListener;
+import com.som.sombrero.listeners.OnGoalScoredListener;
+import com.som.sombrero.listeners.OnWallBounceListener;
 
 public class BallView extends AppCompatImageView implements View.OnTouchListener, GestureDetector.OnGestureListener {
 
@@ -20,8 +21,9 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
     private Handler mHandler;
     private Runnable mRunnable;
 
-    private BallLeftScreenListener ballLeftScreenListener = null;
-    private WallBounceListener wallBounceListener = null;
+    private OnBallLeftScreenListener onBallLeftScreenListener = null;
+    private OnWallBounceListener onWallBounceListener = null;
+    private OnGoalScoredListener onGoalScoredListener = null;
 
     private float speedX = 0;
     private float speedY = 0;
@@ -63,29 +65,32 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
                 if (futureX < 0) {
                     dx = Math.abs(dx);
                     speedX = Math.abs(speedX);
-                    if (wallBounceListener != null) {
-                        wallBounceListener.onWallBounced();
+                    if (onWallBounceListener != null) {
+                        onWallBounceListener.onBounce();
                     }
                 }
-                if (futureX > width) {
+                if (futureX > width - getWidth()) {
                     dx = - Math.abs(dx);
                     speedX = - Math.abs(speedX);
-                    if (wallBounceListener != null) {
-                        wallBounceListener.onWallBounced();
+                    if (onWallBounceListener != null) {
+                        onWallBounceListener.onBounce();
                     }
                 }
                 if (futureY < 0) {
                     dy = Math.abs(dy);
                     speedY = Math.abs(speedY);
-                    if (ballLeftScreenListener != null) {
-                        ballLeftScreenListener.onScreenLeft();
+                    if (onBallLeftScreenListener != null) {
+                        onBallLeftScreenListener.onScreenLeft();
                     }
                 }
-                if (futureY > height) {
+                if (futureY > height - getHeight()) {
                     dy = - Math.abs(dy);
                     speedY = - Math.abs(dy);
-                    if (wallBounceListener != null) {
-                        wallBounceListener.onWallBounced();
+                    if (onGoalScoredListener != null) {
+                        onGoalScoredListener.onGoalScored();
+                    }
+                    if (onWallBounceListener != null) {
+                        onWallBounceListener.onBounce();
                     }
                 }
 
@@ -144,11 +149,27 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
         return true;
     }
 
-    public void setBallLeftScreenListener(BallLeftScreenListener ballLeftScreenListener) {
-        this.ballLeftScreenListener = ballLeftScreenListener;
+    public OnBallLeftScreenListener getOnBallLeftScreenListener() {
+        return onBallLeftScreenListener;
     }
 
-    public void setWallBounceListener(WallBounceListener wallBounceListener) {
-        this.wallBounceListener = wallBounceListener;
+    public void setOnBallLeftScreenListener(OnBallLeftScreenListener onBallLeftScreenListener) {
+        this.onBallLeftScreenListener = onBallLeftScreenListener;
+    }
+
+    public OnWallBounceListener getOnWallBounceListener() {
+        return onWallBounceListener;
+    }
+
+    public void setOnWallBounceListener(OnWallBounceListener onWallBounceListener) {
+        this.onWallBounceListener = onWallBounceListener;
+    }
+
+    public OnGoalScoredListener getOnGoalScoredListener() {
+        return onGoalScoredListener;
+    }
+
+    public void setOnGoalScoredListener(OnGoalScoredListener onGoalScoredListener) {
+        this.onGoalScoredListener = onGoalScoredListener;
     }
 }

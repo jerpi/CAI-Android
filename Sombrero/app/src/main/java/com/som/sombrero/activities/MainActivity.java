@@ -24,15 +24,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int PERMISSIONS_COARSE_LOCATION = 1;
 
     TextView mainText;
-    Button mainButton;
+    Button multiButton;
+    Button soloButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mainText = (TextView) findViewById(R.id.main_textview);
-        mainButton = (Button) findViewById(R.id.main_button);
-        mainButton.setOnClickListener(this);
+        multiButton = (Button) findViewById(R.id.main_multi_button);
+        multiButton.setOnClickListener(this);
+        soloButton = (Button) findViewById(R.id.main_solo_button);
+        soloButton.setOnClickListener(this);
 
         askPermissions();
     }
@@ -41,9 +44,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         switch(v.getId()) {
-            case R.id.main_button:
+            case R.id.main_multi_button:
                 startConnectActivity();
                 break;
+            case R.id.main_solo_button:
+                startGameActivity();
             default:
                 break;
         }
@@ -56,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void startGameActivity() {
         Intent i = new Intent(this, GameActivity.class);
+        i.putExtra(GameActivity.MULTI, false);
         startActivity(i);
     }
 
@@ -67,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void askPermissions() {
         if (checkPermissions()) { return; }
 
-        mainButton.setEnabled(false);
+        multiButton.setEnabled(false);
         ActivityCompat.requestPermissions(
                 this,
                 new String[]{ Manifest.permission.ACCESS_COARSE_LOCATION },
@@ -90,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             return;
                         }
                     }
-                    mainButton.setEnabled(true);
+                    multiButton.setEnabled(true);
                 } else {
                     showPermissionsMessage();
                 }

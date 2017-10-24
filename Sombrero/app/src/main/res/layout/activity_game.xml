@@ -4,11 +4,24 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/white">
+
+    <View
+        android:layout_height="10dp"
+        android:layout_width="match_parent"
+        android:layout_alignParentTop="true"
+        android:background="@android:color/holo_green_light"/>
+
+    <View
+        android:layout_height="10dp"
+        android:layout_width="match_parent"
+        android:layout_alignParentBottom="true"
+        android:background="@android:color/holo_red_light"/>
     
     <com.som.sombrero.views.BallView
         android:id="@+id/game_ball"
         android:src="@drawable/ball"
+        android:layout_centerInParent="true"
         android:layout_width="@dimen/ball_diameter"
-        android:layout_height="@dimen/ball_diameter" />
+        android:layout_height="@dimen/ball_diameter"/>
 
 </RelativeLayout>
