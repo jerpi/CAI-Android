@@ -137,6 +137,6 @@ public class ConnectActivity extends AppCompatActivity implements AdapterView.On
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Log.d(TAG, Integer.toString(position));
-        
+
     }
 }
