@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mainText = (TextView) findViewById(R.id.main_textview);
-        Button mainButton = (Button) findViewById(R.id.main_button);
+        mainButton = (Button) findViewById(R.id.main_button);
         mainButton.setOnClickListener(this);
 
         askPermissions();
@@ -42,11 +42,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch(v.getId()) {
             case R.id.main_button:
-                startGameActivity();
+                startConnectActivity();
                 break;
             default:
                 break;
         }
+    }
+
+    public void startConnectActivity() {
+        Intent i = new Intent(this, ConnectActivity.class);
+        startActivity(i);
     }
 
     public void startGameActivity() {

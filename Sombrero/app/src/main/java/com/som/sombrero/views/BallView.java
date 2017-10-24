@@ -6,7 +6,6 @@ import android.support.annotation.Nullable;
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v7.widget.AppCompatImageView;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -48,11 +47,9 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
         }
 
         mHandler = new Handler();
-
         mRunnable = new Runnable() {
             @Override
             public void run() {
-
                 View parent = (View)getParent();
                 final int width = parent.getWidth();
                 final int height = parent.getHeight();
@@ -135,12 +132,6 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
 
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-        Log.d("GestureDetector",
-                "event1:" + e1.toString() +
-                        "\nevent2:" + e2.toString() +
-                        "\nvelocityX:" + velocityX +
-                        "\nvelocityY:" + velocityY
-        );
         float ratio = 1f/1000f;
         speedX = ratio*velocityX;
         speedY = ratio*velocityY;
