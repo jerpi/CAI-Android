@@ -38,8 +38,6 @@ public class ConnectActivity extends AppCompatActivity implements AdapterView.On
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 String deviceName = device.getName();
                 String deviceHardwareAddress = device.getAddress(); // MAC address
-                Log.d(TAG, deviceName);
-                Log.d(TAG, deviceHardwareAddress);
                 mAdapter.addToDataSet(device);
             }
         }
@@ -134,9 +132,15 @@ public class ConnectActivity extends AppCompatActivity implements AdapterView.On
         startActivity(intent);
     }
 
+    protected void goToGame(BluetoothDevice device) {
+        Intent intent = new Intent(this, GameActivity.class);
+        intent.putExtra(GameActivity.MAC_ADDRESS, device.getAddress());
+        intent.putExtra(GameActivity.MULTI, true);
+        startActivity(intent);
+    }
+
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Log.d(TAG, Integer.toString(position));
-
+        goToGame(mAdapter.getItem(position));
     }
 }
