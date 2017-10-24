@@ -171,7 +171,7 @@ public class BluetoothService extends Service {
         r.write(out);
     }
 
-    private synchronized void connected(BluetoothSocket mmSocket) {
+    private synchronized void connected(BluetoothSocket mmSocket, BluetoothDevice mmDevice) {
         // Cancel the thread that completed the connection
         if (mConnectThread != null) {
             mConnectThread.cancel();
