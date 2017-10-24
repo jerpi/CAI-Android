@@ -18,6 +18,7 @@ import com.som.sombrero.activities.AbstractBluetoothActivity;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.UUID;
 
 public class BluetoothService extends Service {
@@ -25,7 +26,7 @@ public class BluetoothService extends Service {
     private static final String TAG = "btDevice";
     public static final String MAC_ADDRESS = "MacAddress";
 
-    public static final String SPP_UUID = "00001101-0000-1000-8000-00805F9B34FB";
+    public static final UUID SPP_UUID = UUID.randomUUID();
     public static final int STATE_NONE = 0; // we're doing nothing
     public static final int STATE_LISTEN = 1; // now listening for incoming connections
     public static final int STATE_CONNECTING = 2; // now initiating an outgoing connection
@@ -39,12 +40,13 @@ public class BluetoothService extends Service {
     private static ConnectedThread mConnectedThread;
 
     private static Handler mHandler = null;
-    private Handler handler = new MyHandler();
 
-    @Override
-    public void onCreate() {
-        Log.d(TAG, "Service started");
-        super.onCreate();
+    private final IBinder mBinder = new BluetoothServiceBinder();
+
+    public class BluetoothServiceBinder extends Binder {
+        public BluetoothService getService() {
+            return BluetoothService.this;
+        }
     }
 
     @Override
@@ -53,15 +55,8 @@ public class BluetoothService extends Service {
         return mBinder;
     }
 
-    private final IBinder mBinder = new Binder() {
-        BluetoothService getService() {
-            return BluetoothService.this;
-        }
-    };
-
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("PrinterService", "Onstart Command");
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter != null) {
             String macAddress = intent.getStringExtra(MAC_ADDRESS);
@@ -71,10 +66,6 @@ public class BluetoothService extends Service {
                 stopSelf();
                 return START_NOT_STICKY;
             }
-        }
-        String stopService = intent.getStringExtra("stopService");
-        if (stopService != null && stopService.length() > 0) {
-            stop();
         }
         return START_STICKY;
     }
@@ -100,9 +91,6 @@ public class BluetoothService extends Service {
 
     private void setState(int state) {
         BluetoothService.mState = state;
-        if (mHandler != null) {
-            mHandler.obtainMessage(AbstractBluetoothActivity.MESSAGE_STATE_CHANGE, state, -1).sendToTarget();
-        }
     }
 
     public synchronized void stop() {
@@ -187,44 +175,18 @@ public class BluetoothService extends Service {
         mConnectedThread = new ConnectedThread(mmSocket);
         mConnectedThread.start();
 
-        // Message msg =
-        // mHandler.obtainMessage(AbstractActivity.MESSAGE_DEVICE_NAME);
-        // Bundle bundle = new Bundle();
-        // bundle.putString(AbstractActivity.DEVICE_NAME, "p25");
-        // msg.setData(bundle);
-        // mHandler.sendMessage(msg);
         setState(STATE_CONNECTED);
-
-    }
-
-    private static class MyHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {//
-            if (!Thread.currentThread().isInterrupted()) {
-                switch (msg.what) {
-                    case 3:
-                        break;
-                    case 4:
-                        break;
-                    case 5:
-                        break;
-                    case -1:
-                        break;
-                }
-            }
-            super.handleMessage(msg);
-        }
     }
 
     private class ConnectThread extends Thread {
-        private final BluetoothSocket mmSocket;
+        private BluetoothSocket mmSocket;
         private final BluetoothDevice mmDevice;
 
         ConnectThread(BluetoothDevice device) {
             this.mmDevice = device;
             BluetoothSocket tmp = null;
             try {
-                tmp = device.createRfcommSocketToServiceRecord(UUID.fromString(SPP_UUID));
+                tmp = device.createRfcommSocketToServiceRecord(SPP_UUID);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -239,13 +201,19 @@ public class BluetoothService extends Service {
                 mmSocket.connect();
             } catch (IOException e) {
                 try {
-                    mmSocket.close();
-                } catch (IOException e1) {
+                    mmSocket = (BluetoothSocket) mmDevice.getClass().getMethod("createRfcommSocket", new Class[] {int.class}).invoke(mmDevice, 1);
+                    mmSocket.connect();
+                } catch (IOException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e1) {
+                    try {
+                        mmSocket.close();
+                    } catch (IOException e2) {
+                        e2.printStackTrace();
+                    }
+                    connectionFailed();
                     e1.printStackTrace();
                 }
-                connectionFailed();
+                boolean b = mmSocket.isConnected();
                 return;
-
             }
             synchronized (BluetoothService.this) {
                 mConnectThread = null;
@@ -257,7 +225,7 @@ public class BluetoothService extends Service {
             try {
                 mmSocket.close();
             } catch (IOException e) {
-                Log.e("PrinterService", "close() of connect socket failed", e);
+                Log.e(TAG, "close() of connect socket failed", e);
             }
         }
     }
@@ -285,40 +253,48 @@ public class BluetoothService extends Service {
         public void run() {
             while (true) {
                 try {
-                    //if (!encodeData(mmInStream)) {
-                    //    mState = STATE_NONE;
-                    //    connectionLost();
-                    //    break;
-                    //}
-                    // mHandler.obtainMessage(AbstractActivity.MESSAGE_READ,
-                    // bytes, -1, buffer).sendToTarget();
+                    if (!mmSocket.isConnected()) {
+                        mState = STATE_NONE;
+                        connectionLost();
+                        break;
+                    }
+                    read();
                 } catch (Exception e) {
                     e.printStackTrace();
                     connectionLost();
                     BluetoothService.this.stop();
                     break;
                 }
-
             }
         }
 
         void write(byte[] buffer) {
             try {
                 mmOutStream.write(buffer);
+                mmOutStream.flush();
 
                 // Share the sent message back to the UI Activity
                 mHandler.obtainMessage(AbstractBluetoothActivity.MESSAGE_WRITE, buffer.length, -1, buffer).sendToTarget();
             } catch (IOException e) {
-                Log.e("PrinterService", "Exception during write", e);
+                Log.e(TAG, "Exception during write", e);
+            }
+        }
+
+        void read() {
+            try {
+                byte[] bytes = new byte[100];
+                int r = mmInStream.read();
+                Log.d(TAG, Integer.toString(r));
+            } catch (IOException e) {
+                Log.e(TAG, "Exception during read", e);
             }
         }
 
         void cancel() {
             try {
                 mmSocket.close();
-
             } catch (IOException e) {
-                Log.e("PrinterService", "close() of connect socket failed", e);
+                Log.e(TAG, "close() of connect socket failed", e);
             }
         }
     }
@@ -327,11 +303,5 @@ public class BluetoothService extends Service {
     public void onDestroy() {
         stop();
         super.onDestroy();
-    }
-
-    private void sendMsg(int flag) {
-        Message msg = new Message();
-        msg.what = flag;
-        handler.sendMessage(msg);
     }
 }

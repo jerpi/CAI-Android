@@ -172,4 +172,5 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
     public void setOnGoalScoredListener(OnGoalScoredListener onGoalScoredListener) {
         this.onGoalScoredListener = onGoalScoredListener;
     }
+
 }

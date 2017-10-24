@@ -1,7 +1,11 @@
 package com.som.sombrero.activities;
 
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -23,6 +27,9 @@ public class GameActivity extends AbstractBluetoothActivity implements OnBallLef
     private BallView mBall;
     private boolean isMulti = false;
     private String macAddress = null;
+
+    private boolean mBound = false;
+    private BluetoothService mService = null;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -53,6 +60,7 @@ public class GameActivity extends AbstractBluetoothActivity implements OnBallLef
             Intent i = new Intent(this, BluetoothService.class);
             i.putExtra(BluetoothService.MAC_ADDRESS, macAddress);
             startService(i);
+            bindService(i, mConnection, Context.BIND_AUTO_CREATE);
         }
     }
 
@@ -61,6 +69,18 @@ public class GameActivity extends AbstractBluetoothActivity implements OnBallLef
         super.onDestroy();
         mBall.stopHandler();
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mBound) {
+            unbindService(mConnection);
+            Intent i = new Intent(this, BluetoothService.class);
+            stopService(i);
+            mBound = false;
+        }
+    }
+
 
     @Override
     public void onBounce() {
@@ -74,6 +94,28 @@ public class GameActivity extends AbstractBluetoothActivity implements OnBallLef
 
     @Override
     public void onGoalScored() {
+
         Log.d(TAG, "onGoalScored");
+        if (mBound && mService != null) {
+            BluetoothService.write("Hello".getBytes());
+        }
     }
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            BluetoothService.BluetoothServiceBinder binder = (BluetoothService.BluetoothServiceBinder) service;
+            mService = binder.getService();
+            mBound = true;
+            Log.d(TAG, "Service connected");
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            mBound = false;
+            Log.d(TAG, "ServiceDisconnected");
+        }
+    };
 }
