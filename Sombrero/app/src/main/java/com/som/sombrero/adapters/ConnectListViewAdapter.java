@@ -1,28 +1,24 @@
 package com.som.sombrero.adapters;
 
 import android.bluetooth.BluetoothDevice;
-import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.CheckBox;
 import android.widget.TextView;
 
 import com.som.sombrero.R;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 public class ConnectListViewAdapter extends BaseAdapter {
 
-    private ArrayList<BluetoothDevice> mDataSet;
+    private List<BluetoothDevice> mDataSet;
 
     public ConnectListViewAdapter() {
         this.mDataSet = new ArrayList<>();
-    }
-
-    public ConnectListViewAdapter(@NonNull ArrayList<BluetoothDevice> mDataSet) {
-        this.mDataSet = mDataSet;
     }
 
     @Override
@@ -47,11 +43,16 @@ public class ConnectListViewAdapter extends BaseAdapter {
             convertView = inflater.inflate(R.layout.view_connect_list_item, parent, false);
         }
 
-        ((TextView) convertView.findViewById(R.id.view_connect_list_item_name))
-                .setText(getItem(position).getName());
+        BluetoothDevice device = getItem(position);
 
-        ((TextView) convertView.findViewById(R.id.view_connect_list_item_address))
-                .setText(getItem(position).getAddress());
+        ((TextView) convertView.findViewById(R.id.connect_list_item_name))
+                .setText(device.getName());
+
+        ((TextView) convertView.findViewById(R.id.connect_list_item_address))
+                .setText(device.getAddress());
+
+        ((CheckBox) convertView.findViewById(R.id.connect_list_item_is_paired))
+                .setChecked(device.getBondState() == BluetoothDevice.BOND_BONDED);
 
         return convertView;
     }
@@ -61,17 +62,7 @@ public class ConnectListViewAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
-    public void addAllToDataSet(Collection<BluetoothDevice> mDataSet) {
-        this.mDataSet.addAll(mDataSet);
-        notifyDataSetChanged();
-    }
-
-    public void setDataSet(ArrayList<BluetoothDevice> mDataSet) {
-        this.mDataSet = mDataSet;
-        notifyDataSetChanged();
-    }
-
-    public ArrayList<BluetoothDevice> getDataSet() {
+    public List<BluetoothDevice> getDataSet() {
         return mDataSet;
     }
 }

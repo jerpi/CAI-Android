@@ -20,6 +20,7 @@ import com.som.sombrero.R;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
+    @SuppressWarnings("unused")
     private static final String TAG = "MainActivity";
     private static final int PERMISSIONS_COARSE_LOCATION = 1;
 
@@ -31,6 +32,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         mainText = (TextView) findViewById(R.id.main_textview);
         multiButton = (Button) findViewById(R.id.main_multi_button);
         multiButton.setOnClickListener(this);
@@ -61,7 +63,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void startGameActivity() {
         Intent i = new Intent(this, GameActivity.class);
-        i.putExtra(GameActivity.MULTI, false);
         startActivity(i);
     }
 

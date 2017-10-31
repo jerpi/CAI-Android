@@ -11,9 +11,6 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.som.sombrero.exceptions.HandlerLaunchedException;
-import com.som.sombrero.listeners.OnBallLeftScreenListener;
-import com.som.sombrero.listeners.OnGoalScoredListener;
-import com.som.sombrero.listeners.OnWallBounceListener;
 
 public class BallView extends AppCompatImageView implements View.OnTouchListener, GestureDetector.OnGestureListener {
 
@@ -21,12 +18,12 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
     private Handler mHandler;
     private Runnable mRunnable;
 
-    private OnBallLeftScreenListener onBallLeftScreenListener = null;
-    private OnWallBounceListener onWallBounceListener = null;
-    private OnGoalScoredListener onGoalScoredListener = null;
+    private OffScreenListener onBallLeftScreenListener = null;
+    private BounceListener onWallBounceListener = null;
+    private GoalListener onGoalScoredListener = null;
 
-    private float speedX = 0;
-    private float speedY = 0;
+    private float velocityX = 0;
+    private float velocityY = 0;
 
     public BallView(Context context) {
         this(context, null, 0);
@@ -56,38 +53,38 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
                 final int width = parent.getWidth();
                 final int height = parent.getHeight();
 
-                float dx = speedX;
-                float dy = speedY;
+                float dx = velocityX;
+                float dy = velocityY;
 
                 float futureX = getX() + dx;
                 float futureY = getY() + dy;
 
                 if (futureX < 0) {
                     dx = Math.abs(dx);
-                    speedX = Math.abs(speedX);
+                    velocityX = Math.abs(velocityX);
                     if (onWallBounceListener != null) {
                         onWallBounceListener.onBounce();
                     }
                 }
                 if (futureX > width - getWidth()) {
                     dx = - Math.abs(dx);
-                    speedX = - Math.abs(speedX);
+                    velocityX = - Math.abs(velocityX);
                     if (onWallBounceListener != null) {
                         onWallBounceListener.onBounce();
                     }
                 }
                 if (futureY < 0) {
                     dy = Math.abs(dy);
-                    speedY = Math.abs(speedY);
+                    velocityY = Math.abs(velocityY);
                     if (onBallLeftScreenListener != null) {
-                        onBallLeftScreenListener.onScreenLeft();
+                        onBallLeftScreenListener.onOffScreen();
                     }
                 }
                 if (futureY > height - getHeight()) {
                     dy = - Math.abs(dy);
-                    speedY = - Math.abs(dy);
+                    velocityY = - Math.abs(dy);
                     if (onGoalScoredListener != null) {
-                        onGoalScoredListener.onGoalScored();
+                        onGoalScoredListener.onGoal();
                     }
                     if (onWallBounceListener != null) {
                         onWallBounceListener.onBounce();
@@ -138,8 +135,8 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
         float ratio = 1f/1000f;
-        speedX = ratio*velocityX;
-        speedY = ratio*velocityY;
+        this.velocityX = ratio*velocityX;
+        this.velocityY = ratio*velocityY;
         return false;
     }
 
@@ -149,28 +146,44 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
         return true;
     }
 
-    public OnBallLeftScreenListener getOnBallLeftScreenListener() {
-        return onBallLeftScreenListener;
-    }
-
-    public void setOnBallLeftScreenListener(OnBallLeftScreenListener onBallLeftScreenListener) {
+    public void setOnBallLeftScreenListener(OffScreenListener onBallLeftScreenListener) {
         this.onBallLeftScreenListener = onBallLeftScreenListener;
     }
 
-    public OnWallBounceListener getOnWallBounceListener() {
-        return onWallBounceListener;
-    }
-
-    public void setOnWallBounceListener(OnWallBounceListener onWallBounceListener) {
+    public void setOnWallBounceListener(BounceListener onWallBounceListener) {
         this.onWallBounceListener = onWallBounceListener;
     }
 
-    public OnGoalScoredListener getOnGoalScoredListener() {
-        return onGoalScoredListener;
-    }
-
-    public void setOnGoalScoredListener(OnGoalScoredListener onGoalScoredListener) {
+    public void setOnGoalScoredListener(GoalListener onGoalScoredListener) {
         this.onGoalScoredListener = onGoalScoredListener;
     }
 
+    public float getVelocityX() {
+        return velocityX;
+    }
+
+    public void setVelocityX(float velocityX) {
+        this.velocityX = velocityX;
+    }
+
+    public float getVelocityY() {
+        return velocityY;
+    }
+
+    public void setVelocityY(float velocityY) {
+        this.velocityY = velocityY;
+    }
+
+
+    public interface OffScreenListener {
+        void onOffScreen();
+    }
+
+    public interface GoalListener {
+        void onGoal();
+    }
+
+    public interface BounceListener {
+        void onBounce();
+    }
 }

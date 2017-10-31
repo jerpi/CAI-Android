@@ -1,35 +1,53 @@
 package com.som.sombrero.activities;
 
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
+import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothDevice;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.som.sombrero.R;
 import com.som.sombrero.exceptions.HandlerLaunchedException;
-import com.som.sombrero.listeners.OnBallLeftScreenListener;
-import com.som.sombrero.listeners.OnGoalScoredListener;
-import com.som.sombrero.listeners.OnWallBounceListener;
 import com.som.sombrero.services.BluetoothService;
+import com.som.sombrero.utils.ByteArrayConverter;
 import com.som.sombrero.views.BallView;
 
-public class GameActivity extends AbstractBluetoothActivity implements OnBallLeftScreenListener, OnWallBounceListener, OnGoalScoredListener {
+public class GameActivity extends BluetoothActivity implements BallView.GoalListener, BallView.OffScreenListener,
+        BluetoothActivity.OnReadListener, BluetoothActivity.OnToastListener, BluetoothActivity.OnErrorListener {
 
     private static final String TAG = "GameActivity";
 
-    public static final String MULTI = "Multi";
-    public static final String MAC_ADDRESS = "MacAddress";
+    /**
+     * Bundle keys
+     */
+    public static final String DEVICE = "DEVICE";
 
+    /**
+     * Read keys
+     */
+    public static final String GOAL = "GOAL";
+    public static final String OOB = "OUT_OF_BONDS";
+    public static final String VELOCITY_X = "VELOCITY_X";
+    public static final String VELOCITY_Y = "VELOCITY_Y";
+    public static final String POSITION_X = "POSITION_X";
+
+    /**
+     * Views
+     */
     private BallView mBall;
-    private boolean isMulti = false;
-    private String macAddress = null;
+    private TextView mUserScoreView;
+    private TextView mAdversaryScoreView;
 
-    private boolean mBound = false;
-    private BluetoothService mService = null;
+    private boolean isHost = false;
+    private boolean isMulti = false;
+    private BluetoothDevice mDevice;
+
+    /**
+     * Score
+     */
+    private int mUserScore = 0;
+    private int mAdversaryScore = 0;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -38,30 +56,88 @@ public class GameActivity extends AbstractBluetoothActivity implements OnBallLef
 
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
-            isMulti = bundle.getBoolean(MULTI, false);
-            if (isMulti) {
-                macAddress = bundle.getString(MAC_ADDRESS, null);
-                if (macAddress == null) { isMulti = false; }
+            mDevice = bundle.getParcelable(DEVICE);
+            if (mDevice != null) {
+                isMulti = true;
+                isHost = bundle.getBoolean(ConnectActivity.IS_HOST, false);
             }
         }
 
+        mUserScoreView = (TextView) findViewById(R.id.game_user_score);
+        mUserScoreView.setText("0");
+        mAdversaryScoreView = (TextView) findViewById(R.id.game_adversary_score);
+        mAdversaryScoreView.setText("0");
+
         mBall = (BallView) findViewById(R.id.game_ball);
+
         try {
             mBall.startHandler();
         } catch (HandlerLaunchedException e) {
-            Log.d(TAG, e.getLocalizedMessage());
+            Log.d(TAG, "Handler was already launched", e);
         }
 
         mBall.setOnBallLeftScreenListener(this);
-        mBall.setOnWallBounceListener(this);
         mBall.setOnGoalScoredListener(this);
 
         if (isMulti) {
-            Intent i = new Intent(this, BluetoothService.class);
-            i.putExtra(BluetoothService.MAC_ADDRESS, macAddress);
-            startService(i);
-            bindService(i, mConnection, Context.BIND_AUTO_CREATE);
+            onToastListener = this;
+            onErrorListener = this;
+            onReadListener = this;
+            bindToBluetoothService();
+            if (isHost) {
+                //initiate the ball
+            } else {
+                //hide the ball
+            }
         }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void onGoalFromUser() { // Called when you score a goal
+        mUserScore++;
+        mUserScoreView.setText("" + mUserScore);
+        // TODO? add fancy animation
+    }
+
+    private void onOOBFromAdversary(Bundle data) { // Called when the adversary sent the ball your way
+        float velocityX = data.getFloat(VELOCITY_X);
+        float velocityY = data.getFloat(VELOCITY_Y);
+        float positionX = data.getFloat(POSITION_X, 0.5f);
+        //TODO compute positionX according to the screen's width
+
+        if (positionX < 0) {
+            positionX = 0;
+        }
+        if (positionX > 1080) { // TODO change to screen's width
+            positionX = 1080;
+        }
+        mBall.setX(positionX);
+        mBall.setVelocityX(-velocityX); // LEFT <-> RIGHT
+        mBall.setVelocityY(-velocityY); // UP <-> DOWN
+    }
+
+    @Override
+    public void onRead(Bundle args) {
+        String read = args.getString(BluetoothService.MessageContent.KEY_READ, null);
+        switch (read) {
+            case GOAL:
+                onGoalFromUser();
+                break;
+            case OOB:
+                onOOBFromAdversary(args);
+                break;
+        }
+    }
+
+
+    @Override
+    public void onToast(Bundle args) {
+
+    }
+
+    @Override
+    public void onError(Bundle args) {
+
     }
 
     @Override
@@ -71,51 +147,31 @@ public class GameActivity extends AbstractBluetoothActivity implements OnBallLef
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
+    public void onOffScreen() { // Called when the ball goes offscreen (the ball went beyond the top wall)
         if (mBound) {
-            unbindService(mConnection);
-            Intent i = new Intent(this, BluetoothService.class);
-            stopService(i);
-            mBound = false;
+            float positionX = mBall.getX();
+            float velocityX = mBall.getVelocityX();
+            float velocityY = mBall.getVelocityY();
+
+            float[] data = {positionX, velocityX, velocityY};
+            byte[] dataAsByteArray = ByteArrayConverter.floatArray2ByteArray(data);
+
+            mService.write(dataAsByteArray);
+        } else {
+            onGoalFromUser();
         }
+        Log.d(TAG, "onOffScreen");
     }
 
-
+    @SuppressLint("SetTextI18n")
     @Override
-    public void onBounce() {
-        Log.d(TAG, "WallBounced");
-    }
-
-    @Override
-    public void onScreenLeft() {
-        Log.d(TAG, "onScreenLeft");
-    }
-
-    @Override
-    public void onGoalScored() {
-
-        Log.d(TAG, "onGoalScored");
-        if (mBound && mService != null) {
-            BluetoothService.write("Hello".getBytes());
+    public void onGoal() { // Called when a goal was scored by the adversary (the ball hit your bottom wall)
+        mAdversaryScore++;
+        mAdversaryScoreView.setText(""+ mAdversaryScore);
+        Log.d(TAG, "onGoalFromUser");
+        if (mBound) {
+            mService.write("GOAL".getBytes());
+            //TODO? add fancy animation
         }
     }
-
-    private ServiceConnection mConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName className,
-                                       IBinder service) {
-            // We've bound to LocalService, cast the IBinder and get LocalService instance
-            BluetoothService.BluetoothServiceBinder binder = (BluetoothService.BluetoothServiceBinder) service;
-            mService = binder.getService();
-            mBound = true;
-            Log.d(TAG, "Service connected");
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            mBound = false;
-            Log.d(TAG, "ServiceDisconnected");
-        }
-    };
 }

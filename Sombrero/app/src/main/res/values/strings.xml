@@ -6,12 +6,17 @@
     <string name="multi_player">Play with others!</string>
     <string name="solo_player">Play on your own</string>
     <string name="settings">Settings</string>
-    <string name="permissions_required">Cette permission est nécessaire au fonctionnement de l\'application.</string>
+    <string name="permissions_required">Cette permission est nécessaire au fonctionnement de l\' application.</string>
     <string name="no_bluetooth">Cet appareil ne supporte pas le Bluetooth.</string>
     <string name="back_to_menu">Vous allez être redirigé vers le menu.</string>
 
     <!-- Connect Activity -->
+    <string name="set_discoverable">Rendre l\' appareil visible</string>
+
 
     <!-- Game Activity -->
+
+    <!-- BluetoothService -->
+    <string name="connection_failed">Impossible de se connecter à cet appareil, vérifiez que l\'application soit installée et active sur cet appareil.</string>
 
 </resources>
