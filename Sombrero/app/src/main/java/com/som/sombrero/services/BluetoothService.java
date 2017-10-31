@@ -16,6 +16,7 @@ import android.util.Log;
 import com.som.sombrero.BaseApplication;
 import com.som.sombrero.R;
 import com.som.sombrero.activities.ConnectActivity;
+import com.som.sombrero.activities.GameActivity;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +30,12 @@ public class BluetoothService extends Service {
     private static final UUID M_UUID = UUID.fromString("50c7679c-bd8d-11e7-abc4-cec278b6b50a");
 
     /**
+     * Bundle keys
+     */
+    public static final String READ_BYTES = "READ_BYTES";
+    public static final String BUFFER = "BUFFER";
+
+    /**
      * Messages
      */
     private Handler mHandler;
@@ -39,11 +46,8 @@ public class BluetoothService extends Service {
         int TOAST = 2;
         int ERROR = 3;
         int CONNECTION_OK = 4;
-        int CONNECTION_FAILED = 5;
 
-        String KEY_READ = "READ";
-        String KEY_WRITE = "WRITE";
-        String KEY_TOAST = "TOAST";
+        String KEY_MESSAGE = "MESSAGE";
    }
 
     /**
@@ -74,8 +78,6 @@ public class BluetoothService extends Service {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter != null) {
             listenForConnections();
-        } else {
-            //TODO send message to UI
         }
         return mBinder;
     }
@@ -88,7 +90,6 @@ public class BluetoothService extends Service {
     }
 
     private synchronized void listenForConnections() {
-
         if (mAcceptConnectionThread != null && mAcceptConnectionThread.isAlive()) {
             return;
         }
@@ -108,19 +109,6 @@ public class BluetoothService extends Service {
 
     public synchronized void connectToDevice(String macAddress) {
         BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(macAddress);
-
-        if (mAcceptConnectionThread != null) {
-            mAcceptConnectionThread.cancel();
-            mAcceptConnectionThread = null;
-        }
-        if (mConnectThread != null) {
-            mConnectThread.cancel();
-            mConnectThread = null;
-        }
-        if (mConnectedThread != null) {
-            mConnectedThread.cancel();
-            mConnectedThread = null;
-        }
 
         mConnectThread = new ConnectThread(device);
         mConnectThread.start();
@@ -150,16 +138,6 @@ public class BluetoothService extends Service {
     }
 
     public void manageConnectedSocket(BluetoothSocket socket, boolean isHost) {
-
-        if (mAcceptConnectionThread != null) {
-            mAcceptConnectionThread.cancel();
-            mAcceptConnectionThread = null;
-        }
-        if (mConnectThread != null) {
-            mConnectThread.cancel();
-            mConnectThread = null;
-        }
-
         mConnectedThread = new ConnectedThread(socket, isHost);
         mConnectedThread.start();
     }
@@ -216,13 +194,10 @@ public class BluetoothService extends Service {
      * This is the CLIENT thread, it is called to initiate a Bluetooth connection to another device
      */
     private class ConnectThread extends Thread {
-        private final BluetoothDevice mDevice;
         private final BluetoothSocket mSocket;
 
         ConnectThread(BluetoothDevice device) {
             BluetoothSocket tmpSocket = null;
-            mDevice = device;
-
             try {
                 tmpSocket = device.createRfcommSocketToServiceRecord(M_UUID);
             } catch (IOException e) {
@@ -245,7 +220,7 @@ public class BluetoothService extends Service {
                 }
                 Message message = mHandler.obtainMessage(MessageContent.ERROR);
                 Bundle data = new Bundle();
-                data.putString(MessageContent.KEY_TOAST, getResources().getString(R.string.connection_failed));
+                data.putString(MessageContent.KEY_MESSAGE, getResources().getString(R.string.connection_failed));
                 message.setData(data);
                 message.sendToTarget();
                 return;
@@ -260,6 +235,14 @@ public class BluetoothService extends Service {
                 Log.e(TAG, "Socket's close() method failed", e);
             }
         }
+    }
+
+    private void sendDisconnectionMessage() {
+        Message message = mHandler.obtainMessage(MessageContent.ERROR);
+        Bundle data = new Bundle();
+        data.putString(MessageContent.KEY_MESSAGE, getString(R.string.connection_failed));
+        message.setData(data);
+        message.sendToTarget();
     }
 
 
@@ -300,10 +283,9 @@ public class BluetoothService extends Service {
             );
             Bundle data = new Bundle();
             data.putBoolean(ConnectActivity.IS_HOST, isHost);
+            data.putParcelable(GameActivity.DEVICE, socket.getRemoteDevice());
             message.setData(data);
             message.sendToTarget();
-
-            //TODO send CONNECTION_OK message to UI
         }
 
         @Override
@@ -319,33 +301,26 @@ public class BluetoothService extends Service {
                             -1,
                             mBuffer
                     );
+                    Bundle data = new Bundle();
+                    data.putString(MessageContent.KEY_MESSAGE, GameActivity.OOB);
+                    data.putInt(READ_BYTES, readBytes);
+                    data.putByteArray(BUFFER, mBuffer);
+                    message.setData(data);
                     message.sendToTarget();
                 } catch (IOException e) {
                     Log.d(TAG, "Input stream was disconnected", e);
                     break;
                 }
             }
+            sendDisconnectionMessage();
         }
 
         void write(byte[] bytes) {
             try {
                 mOutStream.write(bytes);
-
-                Message writtenMsg = mHandler.obtainMessage(
-                    MessageContent.WRITE,
-                        -1,
-                        -1,
-                        mBuffer
-                );
-                writtenMsg.sendToTarget();
             } catch (IOException e) {
                 Log.e(TAG, "Error occurred when sending data", e);
-
-                Message errorMessage = mHandler.obtainMessage(MessageContent.ERROR);
-                Bundle data = new Bundle();
-                data.putString("Error", "Couldn't send data to the other device");
-                errorMessage.setData(data);
-                mHandler.sendMessage(errorMessage);
+                sendDisconnectionMessage();
             }
         }
 

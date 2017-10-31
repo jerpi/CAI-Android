@@ -49,7 +49,7 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
         mRunnable = new Runnable() {
             @Override
             public void run() {
-                View parent = (View)getParent();
+                View parent = (View) getParent();
                 final int width = parent.getWidth();
                 final int height = parent.getHeight();
 
@@ -98,6 +98,54 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
             }
         };
         mHandler.post(mRunnable);
+    }
+
+    /**
+     * Call this method when the ball goes offscreen
+     */
+    public void pause() {
+        setVisibility(View.GONE);
+        setVelocityX(0);
+        setVelocityY(0);
+
+        stopHandler();
+    }
+
+    public void init() throws HandlerLaunchedException {
+        init(0.5f, 0.5f);
+    }
+
+    public void init(float positionX, float positionY) throws HandlerLaunchedException {
+        setVisibility(View.VISIBLE);
+        View parent = (View) getParent();
+        setX(positionX * parent.getWidth());
+        setY(positionY * parent.getHeight());
+
+        startHandler();
+    }
+
+    /**
+     * Call this method when the ball goes onscreen
+     */
+    public void unPause(float positionX, float velocityX, float velocityY) throws HandlerLaunchedException {
+        setVisibility(View.VISIBLE);
+
+        setVelocityX(velocityX);
+        setVelocityY(velocityY);
+
+        View parent = (View) getParent();
+
+        if (positionX < 0) {
+            positionX = 0;
+        }
+        if (positionX > 1) {
+            positionX = 1;
+        }
+
+        setX(positionX * parent.getWidth());
+        setY(parent.getHeight());
+
+        startHandler();
     }
 
     public void stopHandler() {
@@ -161,7 +209,6 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
     public float getVelocityX() {
         return velocityX;
     }
-
     public void setVelocityX(float velocityX) {
         this.velocityX = velocityX;
     }
@@ -169,11 +216,21 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
     public float getVelocityY() {
         return velocityY;
     }
-
     public void setVelocityY(float velocityY) {
         this.velocityY = velocityY;
     }
 
+    public float getRelativeX() {
+        View parent = (View) getParent();
+        float w = parent.getWidth();
+        return getX() / w;
+    }
+
+    public float getRelativeY() {
+        View parent = (View) getParent();
+        float h = parent.getHeight();
+        return getY() / h;
+    }
 
     public interface OffScreenListener {
         void onOffScreen();

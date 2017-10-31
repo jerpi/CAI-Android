@@ -17,6 +17,6 @@
     <!-- Game Activity -->
 
     <!-- BluetoothService -->
-    <string name="connection_failed">Impossible de se connecter à cet appareil, vérifiez que l\'application soit installée et active sur cet appareil.</string>
+    <string name="connection_failed">Impossible de se connecter à cet appareil.\nVérifiez que l\'application est installée et active sur cet appareil.</string>
 
 </resources>

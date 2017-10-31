@@ -27,11 +27,11 @@ public class ByteArrayConverter {
     }
 
     @NonNull
-    public static float[] byteArray2FloatArray(byte[] values) {
+    public static float[] byteArray2FloatArray(byte[] values, int bytes) {
         FloatBuffer buffer = FloatBuffer.allocate(values.length/4);
         ByteBuffer byteBuffer = ByteBuffer.wrap(values);
 
-        for (int i = 0; i < values.length/4; i++) {
+        for (int i = 0; i < Math.min(values.length, bytes)/4; i++) {
             float f = byteBuffer.getFloat(i*4);
             buffer.put(f);
         }

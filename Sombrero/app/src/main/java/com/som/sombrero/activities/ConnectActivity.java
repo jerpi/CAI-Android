@@ -194,7 +194,7 @@ public class ConnectActivity extends BluetoothActivity implements AdapterView.On
     }
 
     protected void goToMenu() {
-        Intent intent = new Intent(ConnectActivity.this, MainActivity.class);
+        Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
     }
@@ -224,13 +224,13 @@ public class ConnectActivity extends BluetoothActivity implements AdapterView.On
 
     @Override
     public void onToast(Bundle args) {
-        Toast.makeText(this, args.getString(BluetoothService.MessageContent.KEY_TOAST), Toast.LENGTH_SHORT)
+        Toast.makeText(this, args.getString(BluetoothService.MessageContent.KEY_MESSAGE), Toast.LENGTH_SHORT)
                 .show();
     }
 
     @Override
     public void onError(Bundle args) {
-        Toast.makeText(this, args.getString(BluetoothService.MessageContent.KEY_TOAST), Toast.LENGTH_LONG)
+        Toast.makeText(this, args.getString(BluetoothService.MessageContent.KEY_MESSAGE), Toast.LENGTH_LONG)
                 .show();
     }
 }
