@@ -121,23 +121,23 @@ public class GameActivity extends BluetoothActivity implements BallView.GoalList
         float positionX = floatValues[POSITION_X];
 
         try {
-            mBall.unPause(positionX, -velocityX, -velocityY); // LEFT <-> RIGHT | UP <-> DOWN
+            mBall.unPause(positionX, velocityX, velocityY); // LEFT <-> RIGHT | UP <-> DOWN
         } catch (HandlerLaunchedException e) {
             Log.e(TAG, "Handler was already launched", e);
         }
     }
 
     @Override
-    public void onRead(Bundle args) {
+    public void onRead(Bundle args) { // not the cleanest way to do it but it's enough
         int readBytes = args.getInt(READ_BYTES, 0);
-        if (readBytes == 3*4) {
+
+        if (readBytes == 3*4) { // each float is 4bytes, we need 3 of them (posX, velX, velY)
             onOOBFromAdversary(args);
         }
-        if (readBytes == 4*4) {
+        if (readBytes == GOAL.getBytes().length) { // "GOAL" should be 4 bytes
             onGoalFromUser();
         }
     }
-
 
     @Override
     public void onToast(Bundle args) {
@@ -206,18 +206,17 @@ public class GameActivity extends BluetoothActivity implements BallView.GoalList
 
             byte[] dataAsByteArray = ByteArrayConverter.floatArray2ByteArray(data);
             mService.write(dataAsByteArray);
+            mBall.pause();
         } else {
             onGoalFromUser();
         }
-        Log.d(TAG, "onOffScreen");
     }
 
-    @SuppressLint("SetTextI18n")
+    @SuppressLint("SetTextI18n") // remove warning on "" + int
     @Override
     public void onGoal() { // Called when a goal was scored by the adversary (the ball hit your bottom wall)
         mAdversaryScore++;
         mAdversaryScoreView.setText(""+ mAdversaryScore);
-        Log.d(TAG, "onGoalFromUser");
         if (mBound) {
             mService.write("GOAL".getBytes());
             //TODO? add fancy animation

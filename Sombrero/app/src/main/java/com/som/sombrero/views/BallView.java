@@ -73,7 +73,7 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
                         onWallBounceListener.onBounce();
                     }
                 }
-                if (futureY < 0) {
+                if (futureY < -getHeight()) {
                     dy = Math.abs(dy);
                     velocityY = Math.abs(velocityY);
                     if (onBallLeftScreenListener != null) {
@@ -94,7 +94,9 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
                 setX(getX() + dx);
                 setY(getY() + dy);
 
-                mHandler.postDelayed(this, 1000/60);
+                if (mHandler != null) {
+                    mHandler.postDelayed(this, 1000/60);
+                }
             }
         };
         mHandler.post(mRunnable);
@@ -105,9 +107,6 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
      */
     public void pause() {
         setVisibility(View.GONE);
-        setVelocityX(0);
-        setVelocityY(0);
-
         stopHandler();
     }
 
@@ -120,7 +119,6 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
         View parent = (View) getParent();
         setX(positionX * parent.getWidth());
         setY(positionY * parent.getHeight());
-
         startHandler();
     }
 
@@ -130,20 +128,22 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
     public void unPause(float positionX, float velocityX, float velocityY) throws HandlerLaunchedException {
         setVisibility(View.VISIBLE);
 
-        setVelocityX(velocityX);
-        setVelocityY(velocityY);
+        setVelocityX(-velocityX); // The direction is reversed from the other phone's viewpoint
+        setVelocityY(Math.abs(velocityY)); // We want the ball going down
 
         View parent = (View) getParent();
-
-        if (positionX < 0) {
-            positionX = 0;
+        final float parentWidth = parent.getWidth();
+        float absoluteXPosition = parentWidth * (1 - positionX);
+        if (absoluteXPosition < 0) {
+            absoluteXPosition = 0;
+            setVelocityX(Math.abs(velocityX));
+        } else if (absoluteXPosition > parentWidth - getWidth()) {
+            absoluteXPosition = parentWidth - getWidth();
+            setVelocityX(-Math.abs(velocityX));
         }
-        if (positionX > 1) {
-            positionX = 1;
-        }
 
-        setX(positionX * parent.getWidth());
-        setY(parent.getHeight());
+        setX(absoluteXPosition);
+        setY(-getHeight());
 
         startHandler();
     }
@@ -222,13 +222,13 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
 
     public float getRelativeX() {
         View parent = (View) getParent();
-        float w = parent.getWidth();
+        float w = parent.getWidth() - getWidth();
         return getX() / w;
     }
 
     public float getRelativeY() {
         View parent = (View) getParent();
-        float h = parent.getHeight();
+        float h = parent.getHeight() - getHeight();
         return getY() / h;
     }
 

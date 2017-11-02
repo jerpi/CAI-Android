@@ -302,7 +302,6 @@ public class BluetoothService extends Service {
                             mBuffer
                     );
                     Bundle data = new Bundle();
-                    data.putString(MessageContent.KEY_MESSAGE, GameActivity.OOB);
                     data.putInt(READ_BYTES, readBytes);
                     data.putByteArray(BUFFER, mBuffer);
                     message.setData(data);
