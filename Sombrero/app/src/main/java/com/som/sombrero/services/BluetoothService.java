@@ -27,6 +27,9 @@ public class BluetoothService extends Service {
 
     private static final String TAG = "BluetoothService";
     private static final String NAME = "SombreroBT";
+    /**
+     * generated UUID, connection will only work with devices using this (meaning only the ones with this service running)
+     */
     private static final UUID M_UUID = UUID.fromString("50c7679c-bd8d-11e7-abc4-cec278b6b50a");
 
     /**

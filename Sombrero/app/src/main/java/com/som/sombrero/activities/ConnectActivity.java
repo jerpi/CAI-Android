@@ -169,6 +169,7 @@ public class ConnectActivity extends BluetoothActivity implements AdapterView.On
     }
 
     protected void backToMenu() {
+        mProgressBar.setVisibility(View.GONE);
         new AlertDialog.Builder(this)
                 .setMessage(R.string.back_to_menu)
                 .setOnDismissListener(new DialogInterface.OnDismissListener() {
@@ -203,6 +204,7 @@ public class ConnectActivity extends BluetoothActivity implements AdapterView.On
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (mBound) {
             mService.connectToDevice(mAdapter.getItem(position).getAddress());
+            mProgressBar.setVisibility(View.VISIBLE);
         }
     }
 
@@ -217,6 +219,7 @@ public class ConnectActivity extends BluetoothActivity implements AdapterView.On
 
     @Override
     public void onConnection(Bundle args) {
+        mProgressBar.setVisibility(View.GONE);
         Intent intent = new Intent(this, GameActivity.class);
         intent.putExtras(args);
         startActivity(intent);
@@ -230,6 +233,7 @@ public class ConnectActivity extends BluetoothActivity implements AdapterView.On
 
     @Override
     public void onError(Bundle args) {
+        mProgressBar.setVisibility(View.GONE);
         Toast.makeText(this, args.getString(BluetoothService.MessageContent.KEY_MESSAGE), Toast.LENGTH_LONG)
                 .show();
     }

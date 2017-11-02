@@ -106,8 +106,8 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
      * Call this method when the ball goes offscreen
      */
     public void pause() {
-        setVisibility(View.GONE);
         stopHandler();
+        setVisibility(View.INVISIBLE);
     }
 
     public void init() throws HandlerLaunchedException {
@@ -115,7 +115,6 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
     }
 
     public void init(float positionX, float positionY) throws HandlerLaunchedException {
-        setVisibility(View.VISIBLE);
         View parent = (View) getParent();
         setX(positionX * parent.getWidth());
         setY(positionY * parent.getHeight());
@@ -128,9 +127,6 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
     public void unPause(float positionX, float velocityX, float velocityY) throws HandlerLaunchedException {
         setVisibility(View.VISIBLE);
 
-        setVelocityX(-velocityX); // The direction is reversed from the other phone's viewpoint
-        setVelocityY(Math.abs(velocityY)); // We want the ball going down
-
         View parent = (View) getParent();
         final float parentWidth = parent.getWidth();
         float absoluteXPosition = parentWidth * (1 - positionX);
@@ -140,11 +136,12 @@ public class BallView extends AppCompatImageView implements View.OnTouchListener
         } else if (absoluteXPosition > parentWidth - getWidth()) {
             absoluteXPosition = parentWidth - getWidth();
             setVelocityX(-Math.abs(velocityX));
+        } else {
+            setVelocityX(-velocityX); // The direction is reversed from the other phone's viewpoint
         }
-
+        setVelocityY(Math.abs(velocityY)); // We want the ball going down
         setX(absoluteXPosition);
         setY(-getHeight());
-
         startHandler();
     }
 

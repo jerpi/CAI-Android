@@ -222,4 +222,9 @@ public class GameActivity extends BluetoothActivity implements BallView.GoalList
             //TODO? add fancy animation
         }
     }
+
+    @Override
+    public void onBackPressed() {
+        goToMenu();
+    }
 }
