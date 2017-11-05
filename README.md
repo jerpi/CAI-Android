@@ -1,4 +1,6 @@
 # CAI-Android
-Objective is to make a ball bounce from a user's telephone screen to another user's telephone screen.
-Communication between phones is expected to be through bluetooth, and the ball(s) can be flinged from one screen to another via motion controls.
-Sensory captors could eventually be used in some way.
+
+L'application permet à deux utilisateurs (sur deux appareils différents) de s'échanger une balle qui rebondit sur l'écran.
+La communication entre les deux utilise le bluetooth.
+
+Il est possible de faire rebondir la balle avec un seul appareil en choisissant la seconde option, dans ce cas aucune communication n'a lieu.
